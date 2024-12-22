@@ -34,4 +34,43 @@ const getTeams = (req, res) => {
   res.send(database.teams);
 };
 
-module.exports = { createTeam, getTeams };
+const updateTeam = (req, res) => {
+  const { id } = req.params;
+  const { name, players } = req.body;
+
+  const database = loadDatabase();
+  const teamIndex = database.teams.findIndex((team) => team.id === parseInt(id));
+
+  if (teamIndex === -1) {
+    return res.status(404).send({ error: 'Time não encontrado!' });
+  }
+
+  if (name) database.teams[teamIndex].name = name;
+  if (players && players.length === 11) {
+    database.teams[teamIndex].players = players;
+  } else if (players) {
+    return res.status(400).send({ error: 'O time deve ter exatamente 11 jogadores!' });
+  }
+
+  saveToDatabase(database);
+
+  res.send({ message: 'Time atualizado com sucesso!', team: database.teams[teamIndex] });
+};
+
+const deleteTeam = (req, res) => {
+  const { id } = req.params;
+
+  const database = loadDatabase();
+  const teamIndex = database.teams.findIndex((team) => team.id === parseInt(id));
+
+  if (teamIndex === -1) {
+    return res.status(404).send({ error: 'Time não encontrado!' });
+  }
+
+  const deletedTeam = database.teams.splice(teamIndex, 1);
+  saveToDatabase(database);
+
+  res.send({ message: 'Time excluído com sucesso!', team: deletedTeam[0] });
+};
+
+module.exports = { createTeam, getTeams, updateTeam, deleteTeam };
